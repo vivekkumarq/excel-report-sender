@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Report Sender</title>
+  <meta name="description" content="Turns the Daily Performance Report workbook into WhatsApp-ready text, images and PDFs, right in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,700;1,400;1,700&family=Carlito:ital,wght@0,400;0,700;1,400;1,700&family=Cousine:ital,wght@0,400;0,700;1,400;1,700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Daily Report Sender</h1>
+    <p class="lead">Pick the day's <b>Daily Performance Report</b> workbook. Every report in its Name Box list is turned into a text message, an image or a PDF, in the order it should go out. Then send each step to WhatsApp.</p>
+
+    <label id="drop" class="drop">
+      <input id="file" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      <span class="big">Choose the .xlsx file</span>
+      <span class="small">or drop it here</span>
+    </label>
+
+    <p id="status" class="status" aria-live="polite"></p>
+    <div id="out"></div>
+
+    <footer>The file never leaves this device: it is read and drawn in your browser, and nothing is uploaded.</footer>
+  </main>
+</body>
+</html>
