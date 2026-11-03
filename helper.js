@@ -4,11 +4,17 @@ import { zipSync } from './vendor/fflate.js';
 const FILES = ['manifest.json', 'background.js', 'site.js', 'whatsapp.js', 'whatsapp-page.js', 'icon16.png', 'icon48.png', 'icon128.png'];
 const state = document.querySelector('#helper-state'), box = document.querySelector('#helper');
 
-function refresh() {
-  const v = document.documentElement.dataset.drsHelper;
-  state.textContent = v ? `Helper installed (version ${v}).` : 'Helper not installed in this browser.';
-  state.className = v ? 'note ok' : 'note';
-  if (!v && !sessionStorage.getItem('helper-seen')) box.open = true;
+const latest = fetch('extension/manifest.json').then(r => r.json()).then(m => m.version).catch(() => null);
+const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); return false; };
+
+async function refresh() {
+  const v = document.documentElement.dataset.drsHelper, l = await latest;
+  const old = v && l && newer(l, v);
+  state.textContent = !v ? 'Helper not installed in this browser.'
+    : old ? `Helper ${v} is installed; version ${l} is faster. Download it again, unzip it over the old folder, then press the reload icon on the helper's card in chrome://extensions.`
+      : `Helper installed (version ${v}).`;
+  state.className = v && !old ? 'note ok' : old ? 'note err' : 'note';
+  if ((!v || old) && !sessionStorage.getItem('helper-seen')) box.open = true;
   sessionStorage.setItem('helper-seen', '1');
 }
 refresh();
