@@ -10,11 +10,12 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,700;1,400;1,700&family=Carlito:ital,wght@0,400;0,700;1,400;1,700&family=Cousine:ital,wght@0,400;0,700;1,400;1,700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
+  <script type="module" src="helper.js"></script>
 </head>
 <body>
   <main>
     <h1>Daily Report Sender</h1>
-    <p class="lead">Pick the day's <b>Daily Performance Report</b> workbook. Every report in its Name Box list is turned into a text message, an image or a PDF, in the order it should go out. Then send each step to WhatsApp.</p>
+    <p class="lead">Pick the day's <b>Daily Performance Report</b> workbook. Every report in its Name Box list is turned into a text message, an image or a PDF, in the order it should go out. Then send it all to your own WhatsApp chat.</p>
 
     <label id="drop" class="drop">
       <input id="file" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
@@ -24,6 +25,19 @@
 
     <p id="status" class="status" aria-live="polite"></p>
     <div id="out"></div>
+
+    <details id="helper" class="helper">
+      <summary>WhatsApp helper: send everything to your own chat in one click</summary>
+      <p>A website cannot reach into WhatsApp Web by itself, so a small helper extension does it. With the helper, <b>Send all to my WhatsApp</b> opens WhatsApp Web in this browser and posts the text, the images and the PDFs, in order, into the chat with yourself (shown as "You", "Message yourself" or your own name). It works for whichever WhatsApp account is logged in to WhatsApp Web here.</p>
+      <p id="helper-state" class="note"></p>
+      <ol>
+        <li><button id="helper-zip" type="button">Download the helper (.zip)</button> and unzip it.</li>
+        <li>Open <code>chrome://extensions</code> (Edge: <code>edge://extensions</code>) and turn on <b>Developer mode</b>.</li>
+        <li>Click <b>Load unpacked</b> and choose the unzipped <code>report-helper</code> folder.</li>
+        <li>Log in to <a href="https://web.whatsapp.com/" target="_blank" rel="noopener">WhatsApp Web</a> in this browser, then reload this page.</li>
+      </ol>
+      <p class="note">Works in Chrome, Edge, Brave and other Chromium browsers on a computer. Phones cannot add extensions: there, each step's <b>Send to WhatsApp</b> opens the share screen, where you pick your own chat.</p>
+    </details>
 
     <footer>The file never leaves this device: it is read and drawn in your browser, and nothing is uploaded.</footer>
   </main>

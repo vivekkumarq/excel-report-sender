@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Daily Report Sender - WhatsApp helper",
+  "short_name": "Report helper",
+  "version": "1.0.0",
+  "description": "Puts the reports made by Daily Report Sender into your own WhatsApp Web chat (\"You\"), in order.",
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "permissions": ["storage", "unlimitedStorage"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://excelreporter.duckdns.org/*", "https://vivekkumarq.github.io/excel-report-sender/*", "http://127.0.0.1/*", "http://localhost/*"],
+      "js": ["site.js"],
+      "run_at": "document_start"
+    },
+    { "matches": ["https://web.whatsapp.com/*"], "js": ["whatsapp.js"], "run_at": "document_idle" },
+    { "matches": ["https://web.whatsapp.com/*"], "js": ["whatsapp-page.js"], "run_at": "document_idle", "world": "MAIN" }
+  ]
+}

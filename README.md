@@ -7,13 +7,29 @@ Everything runs in the browser. The workbook is never uploaded anywhere.
 ## Using it
 
 1. Open the site and pick the day's `.xlsx` file.
-2. In about 2 seconds the page lists the outputs in send order, in three steps:
+2. In a few seconds the page lists the outputs in send order, in three steps:
    1. the `SMS_To_IMC` text message;
-   2. 23 report images;
-   3. 8 PDFs, including one combined PDF of the four CCL coal / OBR / offtake / rake reports.
-3. Press **Send to WhatsApp** on each step and pick the contact or group. On a phone this opens WhatsApp directly. On Windows it works through the share dialog when the WhatsApp desktop app is installed.
+   2. 23 report images, with no names attached;
+   3. 8 PDFs with the usual file names and page layout.
+3. Press **Send all to my WhatsApp**. Everything goes, in order, into the chat with yourself in WhatsApp Web. That chat shows as "You", "Message yourself" or your own name, depending on the account and language.
 
-Where the browser cannot share files, use **Download** and attach the files in WhatsApp.
+### The WhatsApp helper
+
+A website cannot reach into WhatsApp Web by itself, so a small browser extension (`extension/`) does the posting. The site offers it as **Download the helper (.zip)**. To install it:
+
+1. Open `chrome://extensions` (or `edge://extensions`).
+2. Turn on Developer mode.
+3. Click **Load unpacked** and choose the unzipped folder.
+
+The helper works for whichever account is logged in to WhatsApp Web:
+
+- it reads that account's own number from WhatsApp Web;
+- it opens `web.whatsapp.com/send?phone=<own number>`, which is the self chat;
+- it pastes the text, then the images, then the PDFs, and presses WhatsApp's send button each time.
+
+Each send job is used at most once, so nothing is ever sent twice.
+
+Without the helper (for example on a phone), each step's **Send to WhatsApp** opens the system share screen, where you pick the chat.
 
 ## What gets sent
 
@@ -21,7 +37,14 @@ Edit [`reports.js`](reports.js). Each entry is a named range from Excel's Name B
 
 - `'text'`: the cells' text, one line per visible row;
 - `'image'`: a PNG of the range;
-- `'pdf'`: a PDF. Give a list of names to get one PDF with a page per range.
+- `'pdf'`: a PDF named `file`, laid out with `page`:
+  - `paper` and `orientation`;
+  - `margins` in points;
+  - `fit` (`'width'`, or `'page'` to fit the whole page).
+
+  Rows run on to more pages where a page is full, and at the sheet's own page breaks. A PDF with several names stacks them `perPage` to a page, like pictures pasted into a document.
+
+The PDF settings in `reports.js` were measured from the sample PDFs printed from Excel.
 
 The list order is the send order. Consecutive entries of the same format are shared together.
 

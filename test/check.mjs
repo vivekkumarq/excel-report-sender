@@ -20,7 +20,9 @@ assert.equal(ev('C1=""'), true);
 assert.ok(cmp('a', 1) > 0 && cmp(null, 0) === 0);
 assert.deepEqual(parseRange('B3:A1'), [1, 1, 3, 2]);
 
-const pdf = new Uint8Array(await jpegPdf([{ jpeg: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), w: 1, h: 1, pw: 10, ph: 10 }]).arrayBuffer());
+const img = { jpeg: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), w: 1, h: 1, x: 5, y: 5, dw: 10, dh: 10 };
+const pdf = new Uint8Array(await jpegPdf([{ pw: 612, ph: 792, images: [img, img] }, { pw: 792, ph: 612, images: [img] }]).arrayBuffer());
+assert.equal(new TextDecoder('latin1').decode(pdf).match(/\/Type \/Page\b/g).length, 2);
 const txt = new TextDecoder('latin1').decode(pdf), xref = +/startxref\n(\d+)/.exec(txt)[1];
 assert.ok(txt.startsWith('%PDF-1.4') && txt.slice(xref).startsWith('xref'));
 for (const [i, o] of [...txt.slice(xref).matchAll(/(\d{10}) 00000 n/g)].entries()) assert.ok(txt.slice(+o[1]).startsWith(`${i + 1} 0 obj`));

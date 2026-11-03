@@ -179,6 +179,10 @@ export function parseSheet(xml, sst) {
   });
   const fp = attrs(/<sheetFormatPr\b([^>]*)>/.exec(head)?.[1] || ''), view = attrs(/<sheetView\b([^>]*)>/.exec(head)?.[1] || '');
   const merges = [...tail.matchAll(/<mergeCell ref="([^"]+)"/g)].map(m => parseRange(m[1])).filter(Boolean);
+  // print setup: margins (inches -> points) and manual page breaks (break after row `id`)
+  const pm = attrs(/<pageMargins\b([^>]*?)\/?>/.exec(tail)?.[1] || ''), inch = (k, d) => (pm[k] != null ? +pm[k] : d) * 72;
+  const margins = { l: inch('left', 0.7), r: inch('right', 0.7), t: inch('top', 0.75), b: inch('bottom', 0.75) };
+  const rowBreaks = [...(/<rowBreaks\b[^>]*>([\s\S]*?)<\/rowBreaks>/.exec(tail)?.[1] || '').matchAll(/<brk id="(\d+)"/g)].map(m => +m[1]);
 
   const cf = [];
   for (const m of tail.matchAll(/<conditionalFormatting\b([^>]*)>([\s\S]*?)<\/conditionalFormatting>/g)) {
@@ -200,7 +204,7 @@ export function parseSheet(xml, sst) {
   for (const b of cf) for (const r of b.rules) for (const f of r.formulas) for (const s of f.matchAll(/(?:'((?:[^']|'')+)'|([A-Za-z_][\w.]*))!/g)) refSheets.add((s[1] || s[2]).replace(/''/g, "'"));
 
   return {
-    cells, rows, cols, merges, cf, refSheets: [...refSheets],
+    cells, rows, cols, merges, cf, refSheets: [...refSheets], margins, rowBreaks,
     defaultColWidth: fp.defaultColWidth != null ? +fp.defaultColWidth : null, baseColWidth: +(fp.baseColWidth || 8),
     defaultRowHeight: +(fp.defaultRowHeight || 15), zeroHeight: on(fp.zeroHeight),
     showGrid: view.showGridLines !== '0' && view.showGridLines !== 'false', showZeros: view.showZeros !== '0' && view.showZeros !== 'false',

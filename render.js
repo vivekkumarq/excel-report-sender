@@ -26,16 +26,39 @@ export function digitWidth(book) {
 }
 const colPx = (w, mdw) => Math.trunc(((256 * w + Math.trunc(128 / mdw)) / 256) * mdw);
 
-function sizes(book, sheet) {
-  const mdw = book.mdw ??= digitWidth(book);
-  const defW = sheet.defaultColWidth != null ? colPx(sheet.defaultColWidth, mdw) : Math.ceil((sheet.baseColWidth * mdw + 5) / 8) * 8;
-  const defH = sheet.zeroHeight ? 0 : Math.round(sheet.defaultRowHeight * PX);
+// Widest digit of a font as a fraction of its size (for column widths at printer resolution).
+function fontRatios(font) {
+  const c = scratch();
+  c.font = cssFont(font, 1000);
+  return { digit: Math.max(...[...'0123456789'].map(d => c.measureText(d).width)) / 1000 };
+}
+
+// When printing, Excel sizes columns at printer resolution, which makes them a little wider relative to the rows
+// than on screen. PDFs follow that (checked against Excel's own printed PDFs of this workbook, within ~3%).
+// ponytail: rows keep their saved heights; Excel also re-fits auto-height rows when printing, which no simple
+// formula matched for every font. Revisit if a report's page breaks drift from Excel's.
+const PRINT_DPI = 600;
+
+function sizes(book, sheet, print = false) {
+  const font0 = book.styles.fonts[0] || {}, unit = print ? 96 / PRINT_DPI : 1; // device px -> CSS px
+  const mdw = print ? (book.mdwPrint ??= Math.round(fontRatios(font0).digit * Math.round((font0.sz || 11) * PRINT_DPI / 72))) : (book.mdw ??= digitWidth(book));
+  const defW = (sheet.defaultColWidth != null ? colPx(sheet.defaultColWidth, mdw) : Math.ceil((sheet.baseColWidth * mdw + 5) / 8) * 8) * unit;
   const colDef = c => sheet.cols.find(k => c >= k.min && c <= k.max);
+  const round = print ? v => v : Math.round; // the screen snaps rows to whole pixels; paper does not
   return {
     colDef,
-    colW: c => { const k = colDef(c); return !k ? defW : k.hidden ? 0 : k.width != null ? colPx(k.width, mdw) : defW; },
-    rowH: r => { const x = sheet.rows.get(r); return x?.hidden ? 0 : x?.ht != null ? Math.round(x.ht * PX) : defH; },
+    colW: c => { const k = colDef(c); return !k ? defW : k.hidden ? 0 : k.width != null ? colPx(k.width, mdw) * unit : defW; },
+    rowH: r => { const x = sheet.rows.get(r); return x?.hidden ? 0 : x?.ht != null ? round(x.ht * PX) : sheet.zeroHeight ? 0 : round(sheet.defaultRowHeight * PX); },
   };
+}
+
+// Width and per-row heights of a range in CSS pixels (print: as laid out for printing).
+export function rangeRows(book, sheetName, rng, print = false) {
+  const { colW, rowH } = sizes(book, book.sheet(sheetName), print), [r1, c1, r2, c2] = rng, rows = [];
+  let W = 0;
+  for (let c = c1; c <= c2; c++) W += colW(c);
+  for (let r = r1; r <= r2; r++) rows.push({ r, h: rowH(r) });
+  return { W, rows };
 }
 
 function general(v) {
@@ -227,7 +250,7 @@ function fillCss(fill, book) {
 // ---- the range ----
 export function renderRange(book, sheetName, rng, opts = {}) {
   const sheet = book.sheet(sheetName), [r1, c1, r2, c2] = rng, styles = book.styles;
-  const { colW, rowH, colDef } = sizes(book, sheet);
+  const { colW, rowH, colDef } = sizes(book, sheet, opts.print);
   const ws = [], hs = [];
   for (let c = c1; c <= c2; c++) ws.push(colW(c));
   for (let r = r1; r <= r2; r++) hs.push(rowH(r));
@@ -239,14 +262,15 @@ export function renderRange(book, sheetName, rng, opts = {}) {
   const xAt = c => c < c1 ? -span(colW, c, c1 - 1) : c <= c2 + 1 ? xs[c - c1] : W + span(colW, c2 + 1, c - 1);
   const yAt = r => r < r1 ? -span(rowH, r, r1 - 1) : r <= r2 + 1 ? ys[r - r1] : H + span(rowH, r2 + 1, r - 1);
 
-  const scale = Math.min(opts.scale ?? 2, Math.sqrt((opts.maxPixels ?? 16e6) / Math.max(1, W * H)));
+  const want = opts.width ? opts.width / Math.max(1, W) : opts.scale ?? 2; // opts.width: target canvas width in pixels
+  const scale = Math.min(want, Math.sqrt((opts.maxPixels ?? 16e6) / Math.max(1, W * H)));
   const cw = Math.max(1, Math.ceil(W * scale)), ch = Math.max(1, Math.ceil(H * scale));
   // OffscreenCanvas lets the pixels move to an encoder worker without a copy; a CPU-backed context
   // (willReadFrequently) avoids slow GPU read-backs when encoding.
   const canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cw, ch) : Object.assign(document.createElement('canvas'), { width: cw, height: ch });
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch); // whole canvas: fractional sizes leave an edge otherwise
   ctx.scale(scale, scale);
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
 
   const colStyle = ws.map((_, i) => colDef(c1 + i)?.s ?? 0);
   const styleId = (r, c) => { const cell = sheet.cells.get(key(r, c)); if (cell) return cell.s; const row = sheet.rows.get(r); return row?.s ?? (c >= c1 && c <= c2 ? colStyle[c - c1] : colDef(c)?.s ?? 0); };
