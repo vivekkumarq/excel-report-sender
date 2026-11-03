@@ -142,7 +142,20 @@ function sendViaHelper(groups, onProgress) {
     postMessage({ drs: 'send', id, items }, location.origin);
   });
 }
-const shareable = g => g.kind === 'text' ? !!navigator.share : !!navigator.canShare?.({ files: g.files });
+const shareable = g => g.kind === 'text' ? !!navigator.share : !!navigator.canShare?.({ files: g.files.slice(0, 1) });
+// Chrome refuses a share of more than 10 files or 50 MB ("Permission denied"); split into parts that fit.
+const SHARE_MAX_FILES = 10, SHARE_MAX_BYTES = 50 * 1024 * 1024;
+function shareParts(files) {
+  const parts = [[]];
+  let bytes = 0;
+  for (const f of files) {
+    const cur = parts.at(-1);
+    if (cur.length && (cur.length >= SHARE_MAX_FILES || bytes + f.size > SHARE_MAX_BYTES)) { parts.push([]); bytes = 0; }
+    parts.at(-1).push(f);
+    bytes += f.size;
+  }
+  return parts;
+}
 
 const KIND = { text: 'Text message', image: 'Images', pdf: 'PDFs' };
 function show(groups) {
@@ -173,13 +186,19 @@ function show(groups) {
         return el('li', {}, el('a', { href: url, target: '_blank', rel: 'noopener', textContent: x.file.name }), el('span', { textContent: ` ${x.pages} page${x.pages > 1 ? 's' : ''} · ${Math.round(x.file.size / 1024)} KB` }));
       }));
 
-    const sendBtn = el('button', { className: 'primary', textContent: 'Send to WhatsApp' });
+    // The share screen takes at most 10 files per share, so bigger steps go out in parts, one tap each.
+    const parts = g.kind === 'text' ? [null] : shareParts(g.files);
+    let part = 0;
+    const label = () => parts.length > 1 ? `Send to WhatsApp (${part + 1} of ${parts.length})` : 'Send to WhatsApp';
+    const sendBtn = el('button', { className: 'primary', textContent: label() });
     sendBtn.onclick = async () => {
       if (helper()) return send([g], sendBtn, note);
       if (!shareable(g)) return alertIn(card, 'This browser cannot share files. Use Download, then attach them in WhatsApp.');
       try {
-        await navigator.share(g.kind === 'text' ? { text: g.text } : { files: g.files });
-        card.classList.add('done'); sendBtn.textContent = 'Shared ✓';
+        await navigator.share(g.kind === 'text' ? { text: g.text } : { files: parts[part] });
+        card.querySelector('.err')?.remove();
+        if (++part < parts.length) { sendBtn.textContent = label(); note.textContent = `Part ${part} of ${parts.length} shared. Tap again for the next ${parts[part].length}.`; return; }
+        card.classList.add('done'); sendBtn.textContent = 'Shared ✓'; note.textContent = '';
       } catch (e) {
         if (e.name !== 'AbortError') alertIn(card, `Sharing failed: ${e.message}`);
       }
