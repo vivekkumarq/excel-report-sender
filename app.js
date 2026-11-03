@@ -143,18 +143,15 @@ function sendViaHelper(groups, onProgress) {
   });
 }
 const shareable = g => g.kind === 'text' ? !!navigator.share : !!navigator.canShare?.({ files: g.files.slice(0, 1) });
-// Chrome refuses a share of more than 10 files or 50 MB ("Permission denied"); split into parts that fit.
+// Chrome refuses a share of more than 10 files or 50 MB ("Permission denied"). Use as few parts as fit, with
+// the files spread evenly in order (23 images -> 8 + 8 + 7).
 const SHARE_MAX_FILES = 10, SHARE_MAX_BYTES = 50 * 1024 * 1024;
 function shareParts(files) {
-  const parts = [[]];
-  let bytes = 0;
-  for (const f of files) {
-    const cur = parts.at(-1);
-    if (cur.length && (cur.length >= SHARE_MAX_FILES || bytes + f.size > SHARE_MAX_BYTES)) { parts.push([]); bytes = 0; }
-    parts.at(-1).push(f);
-    bytes += f.size;
+  for (let k = Math.max(1, Math.ceil(files.length / SHARE_MAX_FILES)); ; k++) {
+    const base = Math.floor(files.length / k), extra = files.length % k, parts = [];
+    for (let i = 0, at = 0; i < k; i++) { const n = base + (i < extra ? 1 : 0); parts.push(files.slice(at, at += n)); }
+    if (parts.every(p => p.reduce((s, f) => s + f.size, 0) <= SHARE_MAX_BYTES) || k >= files.length) return parts.filter(p => p.length);
   }
-  return parts;
 }
 
 const KIND = { text: 'Text message', image: 'Images', pdf: 'PDFs' };
