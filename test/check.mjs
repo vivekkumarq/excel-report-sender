@@ -30,7 +30,9 @@ console.log('formula engine and PDF writer: ok');
 
 const { REPORTS } = await import('../reports.js');
 const before = REPORTS.flatMap((r, i) => r.as === 'sep' ? [REPORTS[i - 1].name] : []);
-assert.deepEqual(before, ['Alok_Kr_Singh_Sir_01', '_ccl_rake', 'AREAWISE_STOCK', 'CMD_Report_06']);
+assert.deepEqual(before, ['Alok_Kr_Singh_Sir_01', '_ccl_rake', 'AREAWISE_STOCK', 'CMD_Report_06',
+  '_area_wise_mine_wise', '_dep_obr_ccl', 'Rainfall_Report', 'Yearly_Cap_Utlzn_Report', 'Top_20']);
+assert.equal(REPORTS.filter(r => r.as === 'image').length, 23);
 console.log('separators: ok');
 
 const path = process.argv[2];

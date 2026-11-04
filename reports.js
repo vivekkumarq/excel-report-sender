@@ -6,9 +6,9 @@
 //   as: 'sep'   -> a "." message, so WhatsApp shows the images before and after it as separate groups
 // Consecutive items of the same kind are sent together.
 const images = ['Alok_kr_Singh_Sir', 'Alok_Kr_Singh_Sir_01', '.', '_ccl_coal', '_ccl_obr', '_ccl_offtake', '_ccl_rake', '.',
-  'AREAWISE_STOCK', '.', 'CMD_Report_01', 'CMD_Report_02', 'CMD_Report_06', '.', '_area_wise_mine_wise', '_dep_obr_ccl',
-  '_Projection_ccl', 'CCL_COMPARATIVE_REPORT', 'Rainfall_Report', 'CCL_GMs', 'GRAPHICAL_Perf_Area',
-  'Yearly_Cap_Utlzn_Report', 'Report_BookPlusSiding_Stock', 'Top_11', 'Top_14', 'Top_20', 'Washery_Report'];
+  'AREAWISE_STOCK', '.', 'CMD_Report_01', 'CMD_Report_02', 'CMD_Report_06', '.', '_area_wise_mine_wise', '.', '_dep_obr_ccl', '.',
+  '_Projection_ccl', 'CCL_COMPARATIVE_REPORT', 'Rainfall_Report', '.', 'CCL_GMs', 'GRAPHICAL_Perf_Area',
+  'Yearly_Cap_Utlzn_Report', '.', 'Report_BookPlusSiding_Stock', 'Top_11', 'Top_14', 'Top_20', '.', 'Washery_Report'];
 
 // File names and page setup copied from the sample PDFs (Excel, Microsoft Print to PDF): US Letter, margins in
 // points as measured on each sample, the range fitted to the page width ('page': to the whole page). Rows run
