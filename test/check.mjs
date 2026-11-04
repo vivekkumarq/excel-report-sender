@@ -28,12 +28,16 @@ assert.ok(txt.startsWith('%PDF-1.4') && txt.slice(xref).startsWith('xref'));
 for (const [i, o] of [...txt.slice(xref).matchAll(/(\d{10}) 00000 n/g)].entries()) assert.ok(txt.slice(+o[1]).startsWith(`${i + 1} 0 obj`));
 console.log('formula engine and PDF writer: ok');
 
+const { REPORTS } = await import('../reports.js');
+const before = REPORTS.flatMap((r, i) => r.as === 'sep' ? [REPORTS[i - 1].name] : []);
+assert.deepEqual(before, ['Alok_Kr_Singh_Sir_01', '_ccl_rake', 'AREAWISE_STOCK', 'CMD_Report_06']);
+console.log('separators: ok');
+
 const path = process.argv[2];
 if (path) {
-  const { REPORTS } = await import('../reports.js');
   const { loadBook } = await import('../book.js');
   const { rangeText } = await import('../render.js');
-  const names = [...new Set(REPORTS.flatMap(r => [r.name].flat()))];
+  const names = [...new Set(REPORTS.flatMap(r => [r.name ?? []].flat()))];
   const t = performance.now();
   const { book, names: refs, missing, timing } = await loadBook(new Blob([await readFile(path)]), names);
   console.log(`loaded ${refs.size}/${names.length} reports in ${Math.round(performance.now() - t)} ms`, timing);

@@ -30,12 +30,13 @@ async function run(file) {
   status.className = 'status'; status.textContent = `Reading ${file.name}…`;
   try {
     const t0 = performance.now();
-    const names = [...new Set(REPORTS.flatMap(r => [r.name].flat()))];
+    const names = [...new Set(REPORTS.flatMap(r => [r.name ?? []].flat()))];
     const { book, names: refs, missing, drawings, timing } = await loadBook(file, names);
     await fontsReady;
 
     // 1. Plan every picture: one per image report, one per PDF page part.
     const jobs = [], plans = REPORTS.map((r, i) => {
+      if (r.as === 'sep') return { kind: 'text', text: '.', sep: true };
       const list = [r.name].flat().filter(n => refs.has(n));
       if (!list.length) return null;
       if (r.as === 'text') return { kind: 'text', text: list.map(n => rangeText(book, refs.get(n).sheet, refs.get(n).range)).join('\n\n') };
@@ -118,7 +119,7 @@ function groupsOf(items) {
   const groups = [];
   for (const it of items) {
     const g = groups.at(-1);
-    if (g && g.kind === it.kind) g.items.push(it); else groups.push({ kind: it.kind, items: [it] });
+    if (g && g.kind === it.kind && !g.items[0].sep && !it.sep) g.items.push(it); else groups.push({ kind: it.kind, items: [it] });
   }
   return groups.map(g => ({ ...g, files: g.items.map(x => x.file).filter(Boolean), text: g.items.map(x => x.text).filter(Boolean).join('\n\n') }));
 }
@@ -206,7 +207,7 @@ function show(groups) {
     const note = el('p', { className: 'note' });
     const count = g.kind === 'text' ? '' : ` · ${g.items.length}`;
     const card = el('section', { className: 'step' },
-      el('header', {}, el('span', { className: 'n', textContent: i + 1 }), el('h2', { textContent: KIND[g.kind] + count })),
+      el('header', {}, el('span', { className: 'n', textContent: i + 1 }), el('h2', { textContent: g.items[0].sep ? 'Separator' : KIND[g.kind] + count })),
       body, el('div', { className: 'actions' }, sendBtn, extra), note);
     out.append(card);
   });

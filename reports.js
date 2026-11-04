@@ -3,9 +3,10 @@
 //   as: 'image' -> PNG picture of the range
 //   as: 'pdf'   -> PDF named `file`, laid out with `page` (see print.js). Several names make one PDF with the
 //                  pictures stacked `perPage` to a page.
-// Consecutive items of the same kind are sent together, so this list becomes 3 sends: text, images, PDFs.
-const images = ['Alok_kr_Singh_Sir', 'Alok_Kr_Singh_Sir_01', '_ccl_coal', '_ccl_obr', '_ccl_offtake', '_ccl_rake',
-  'AREAWISE_STOCK', 'CMD_Report_01', 'CMD_Report_02', 'CMD_Report_06', '_area_wise_mine_wise', '_dep_obr_ccl',
+//   as: 'sep'   -> a "." message, so WhatsApp shows the images before and after it as separate groups
+// Consecutive items of the same kind are sent together.
+const images = ['Alok_kr_Singh_Sir', 'Alok_Kr_Singh_Sir_01', '.', '_ccl_coal', '_ccl_obr', '_ccl_offtake', '_ccl_rake', '.',
+  'AREAWISE_STOCK', '.', 'CMD_Report_01', 'CMD_Report_02', 'CMD_Report_06', '.', '_area_wise_mine_wise', '_dep_obr_ccl',
   '_Projection_ccl', 'CCL_COMPARATIVE_REPORT', 'Rainfall_Report', 'CCL_GMs', 'GRAPHICAL_Perf_Area',
   'Yearly_Cap_Utlzn_Report', 'Report_BookPlusSiding_Stock', 'Top_11', 'Top_14', 'Top_20', 'Washery_Report'];
 
@@ -25,7 +26,7 @@ const pdfs = [
 
 export const REPORTS = [
   { name: 'SMS_To_IMC', as: 'text' },
-  ...images.map(name => ({ name, as: 'image' })),
+  ...images.map(name => name === '.' ? { as: 'sep' } : { name, as: 'image' }),
   ...pdfs.map(([name, file, orientation, margins, fit = 'width']) => ({ name, as: 'pdf', file, page: { paper: 'letter', orientation, margins, fit } })),
   // like the sample made in Word: A4, 1-inch margins, two reports per page at full text width
   { name: ['_ccl_coal', '_ccl_obr', '_ccl_offtake', '_ccl_rake'], as: 'pdf', file: 'CCL Performance Report', page: { paper: 'a4', orientation: 'portrait', margins: 72, perPage: 2 } },
