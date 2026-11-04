@@ -21,7 +21,7 @@ const scratch = () => measurer ??= (typeof OffscreenCanvas !== 'undefined' ? new
 // Excel measures column widths in "maximum digit widths" of the workbook's default font.
 export function digitWidth(book) {
   const c = scratch();
-  c.font = cssFont(book.styles.fonts[0] || {});
+  c.font = cssFont(book.styles.font(0) || {});
   return Math.round(Math.max(...[...'0123456789'].map(d => c.measureText(d).width)));
 }
 const colPx = (w, mdw) => Math.trunc(((256 * w + Math.trunc(128 / mdw)) / 256) * mdw);
@@ -40,7 +40,7 @@ function fontRatios(font) {
 const PRINT_DPI = 600;
 
 function sizes(book, sheet, print = false) {
-  const font0 = book.styles.fonts[0] || {}, unit = print ? 96 / PRINT_DPI : 1; // device px -> CSS px
+  const font0 = book.styles.font(0) || {}, unit = print ? 96 / PRINT_DPI : 1; // device px -> CSS px
   const mdw = print ? (book.mdwPrint ??= Math.round(fontRatios(font0).digit * Math.round((font0.sz || 11) * PRINT_DPI / 72))) : (book.mdw ??= digitWidth(book));
   const defW = (sheet.defaultColWidth != null ? colPx(sheet.defaultColWidth, mdw) : Math.ceil((sheet.baseColWidth * mdw + 5) / 8) * 8) * unit;
   const colDef = c => sheet.cols.find(k => c >= k.min && c <= k.max);
@@ -274,7 +274,7 @@ export function renderRange(book, sheetName, rng, opts = {}) {
 
   const colStyle = ws.map((_, i) => colDef(c1 + i)?.s ?? 0);
   const styleId = (r, c) => { const cell = sheet.cells.get(key(r, c)); if (cell) return cell.s; const row = sheet.rows.get(r); return row?.s ?? (c >= c1 && c <= c2 ? colStyle[c - c1] : colDef(c)?.s ?? 0); };
-  const xf = id => styles.xfs[id] || styles.xfs[0];
+  const xf = id => styles.xf(id) || styles.xf(0);
   const visible = (r, c) => hs[r - r1] > 0 && ws[c - c1] > 0;
   const cellRect = (r, c) => ({ x: xs[c - c1], y: ys[r - r1], w: ws[c - c1], h: hs[r - r1] });
 
@@ -303,7 +303,7 @@ export function renderRange(book, sheetName, rng, opts = {}) {
     const st = xf(cell ? cell.s : styleId(sr, sc));
     const text = ov?.hideValue ? '' : display(book, sheet, cell?.v, st.numFmt);
     const isNum = typeof cell?.v === 'number';
-    const font = { ...styles.fonts[st.font], ...(ov?.font || {}) };
+    const font = { ...styles.font(st.font), ...(ov?.font || {}) };
     const runs = cell?.v?.runs && text === cell.v.text ? cell.v.runs.map(x => ({ text: x.text, font: { ...font, ...(x.font || {}), ...(ov?.font || {}) } })) : [{ text, font }];
     let h = st.h;
     if (h === 'general') h = isNum ? 'right' : typeof cell?.v === 'boolean' || cell?.v?.error ? 'center' : 'left';
@@ -357,7 +357,7 @@ export function renderRange(book, sheetName, rng, opts = {}) {
     const m = mergeAt.get(key(r, c));
     if (m && (r !== m.ar || c !== m.ac)) continue;
     const sr = m ? m.r1 : r, sc = m ? m.c1 : c, ov = cfo.get(key(sr, sc)) ?? (m && cfo.get(key(r, c)));
-    const fill = ov && ov.fill !== undefined ? ov.fill : styles.fills[xf(styleId(sr, sc)).fill];
+    const fill = ov && ov.fill !== undefined ? ov.fill : styles.fill(xf(styleId(sr, sc)).fill);
     const css = fillCss(fill, book);
     if (!css) continue;
     const rc = m ? m.rect : cellRect(r, c);
@@ -368,7 +368,7 @@ export function renderRange(book, sheetName, rng, opts = {}) {
   const edges = [];
   for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
     if (!visible(r, c)) continue;
-    const k = key(r, c), m = mergeAt.get(k), b = styles.borders[xf(styleId(r, c)).border] || {}, ob = cfo.get(k)?.border || {};
+    const k = key(r, c), m = mergeAt.get(k), b = styles.border(xf(styleId(r, c)).border) || {}, ob = cfo.get(k)?.border || {};
     const { x, y, w, h } = cellRect(r, c);
     const side = s => ob[s] || b[s];
     if (side('t') && !(m && r > m.r1)) edges.push({ b: side('t'), x1: x, y1: y, x2: x + w, y2: y });
@@ -402,7 +402,7 @@ export function rangeText(book, sheetName, rng) {
     const parts = [];
     for (let c = c1; c <= c2; c++) {
       const cell = colW(c) && sheet.cells.get(key(r, c));
-      const t = cell ? display(book, sheet, cell.v, (book.styles.xfs[cell.s] || book.styles.xfs[0]).numFmt) : '';
+      const t = cell ? display(book, sheet, cell.v, (book.styles.xf(cell.s) || book.styles.xf(0)).numFmt) : '';
       if (t) parts.push(t);
     }
     lines.push(parts.join(' '));

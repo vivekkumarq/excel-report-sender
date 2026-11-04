@@ -2,44 +2,135 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Daily Report Sender</title>
-  <meta name="description" content="Turns the Daily Performance Report workbook into WhatsApp-ready text, images and PDFs, right in your browser.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,700;1,400;1,700&family=Carlito:ital,wght@0,400;0,700;1,400;1,700&family=Cousine:ital,wght@0,400;0,700;1,400;1,700&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+  <meta name="description" content="Turns the Daily Performance Report workbook into WhatsApp-ready text, pictures and PDFs, right in your browser.">
+  <meta name="theme-color" content="#0e8a5a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
   <script type="module" src="helper.js"></script>
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="logo-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16a36c"/><stop offset="1" stop-color="#0b704a"/></linearGradient>
+      <symbol id="logo" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="14" fill="url(#logo-g)"/>
+        <rect x="15.6" y="11.9" width="27.5" height="37.5" rx="3.8" fill="#fff"/>
+        <path d="M15.6 15.7a3.8 3.8 0 0 1 3.8-3.8h19.9a3.8 3.8 0 0 1 3.8 3.8v4.9H15.6z" fill="#d6f3e4"/>
+        <path d="M18.8 26.3H40M18.8 31.9H40M18.8 37.5H40M25.6 21.9v18.7" stroke="#aadec4" stroke-width="1.4"/>
+        <circle cx="43.1" cy="45" r="11.9" fill="#fff"/><circle cx="43.1" cy="45" r="10.3" fill="#0e8458"/>
+        <path d="M37.2 45.3 49.7 40 44 51.9l-1.2-5z" fill="#fff"/>
+      </symbol>
+    </defs>
+    <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></symbol>
+      <symbol id="i-app" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.2"/><path d="M11 17.5h2"/></symbol>
+      <symbol id="i-message" viewBox="0 0 24 24"><path d="M4.5 5h15a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H9l-4.5 3.5V6a1 1 0 0 1 1-1z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m21 15.5-4.5-4.5L7 19"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+      <symbol id="i-sheet" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M8.5 12.5h7M8.5 16h7M11.5 11v7"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10.5 13.5"/><path d="M21 3 14.5 21l-4-7.5L3 9.5z"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5"/><path d="M5 20h14"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+      <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+      <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M9.5 4.5a2.5 2.5 0 0 1 5 0V6H18v3.5h-1.5a2.5 2.5 0 0 0 0 5H18V18h-3.5v-1.5a2.5 2.5 0 0 0-5 0V18H6v-3.5h1.5a2.5 2.5 0 0 0 0-5H6V6h3.5z"/></symbol>
+      <symbol id="i-zip" viewBox="0 0 24 24"><path d="M5 7.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7.5"/><path d="M3.5 4h17v3.5h-17zM10 11.5h4"/></symbol>
+    </g>
+  </svg>
+
+  <header class="bar">
+    <a class="brand" href="./" aria-label="Daily Report Sender, start over">
+      <svg class="logo"><use href="#logo"/></svg>
+      <span><b>Daily Report Sender</b><small>Excel reports to WhatsApp</small></span>
+    </a>
+    <div class="bar-end">
+      <button id="install" class="btn ghost small" type="button" hidden><svg class="i"><use href="#i-download"/></svg>Install app</button>
+      <a id="helper-pill" class="pill" href="#helper"><span class="led"></span><span class="txt">WhatsApp helper</span></a>
+    </div>
+  </header>
+
   <main>
-    <h1>Daily Report Sender</h1>
-    <p class="lead">Pick the day's <b>Daily Performance Report</b> workbook. Every report in its Name Box list is turned into a text message, an image or a PDF, in the order it should go out. Then send it all to your own WhatsApp chat.</p>
+    <section id="start" class="hero">
+      <h1>Today's reports, ready for WhatsApp in about a second.</h1>
+      <p class="lead">Open the <b>Daily Performance Report</b> workbook. Every report in its Name Box list becomes a message, a picture or a PDF, in the order they go out, and one click sends them all to your own WhatsApp chat.</p>
+      <label id="drop" class="drop">
+        <input id="file" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12">
+        <span class="drop-icon"><svg class="i"><use href="#i-upload"/></svg></span>
+        <span class="big">Choose the workbook</span>
+        <span class="small">or drop it anywhere on this page. Pasting a copied file works too.</span>
+      </label>
+      <ul class="perks">
+        <li><svg class="i"><use href="#i-lock"/></svg><span><b>Private</b>The file never leaves this device. Nothing is uploaded.</span></li>
+        <li><svg class="i"><use href="#i-bolt"/></svg><span><b>Fast</b>Every report is drawn in parallel, on all the processor's cores.</span></li>
+        <li><svg class="i"><use href="#i-app"/></svg><span><b>Works offline</b>Install it as an app; on a phone, share the .xlsx straight to it.</span></li>
+      </ul>
+    </section>
 
-    <label id="drop" class="drop">
-      <input id="file" type="file" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-      <span class="big">Choose the .xlsx file</span>
-      <span class="small">or drop it here</span>
-    </label>
+    <section id="work" class="work" hidden>
+      <div class="filebar card">
+        <span class="file-icon"><svg class="i"><use href="#i-sheet"/></svg></span>
+        <div class="file-meta"><b id="file-name"></b><span id="file-info"></span></div>
+        <button id="again" class="btn ghost" type="button" aria-label="Open another workbook"><svg class="i"><use href="#i-upload"/></svg><span class="wide-only">Open another</span></button>
+      </div>
 
-    <p id="status" class="status" aria-live="polite"></p>
-    <div id="out"></div>
+      <div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="track"><div class="fill"></div></div>
+        <p class="plabel" aria-live="polite"></p>
+      </div>
 
-    <details id="helper" class="helper">
-      <summary>WhatsApp helper: send everything to your own chat in one click</summary>
-      <p>A website cannot reach into WhatsApp Web by itself, so a small helper extension does it. With the helper, <b>Send all to my WhatsApp</b> opens WhatsApp Web in this browser and posts the text, the images and the PDFs, in order, into the chat with yourself (shown as "You", "Message yourself" or your own name). It works for whichever WhatsApp account is logged in to WhatsApp Web here.</p>
+      <div id="stats" class="stats" hidden></div>
+      <p id="warn" class="warn" hidden></p>
+
+      <div class="sendbox card" id="sendbox">
+        <div class="send-actions">
+          <button id="send-all" class="btn primary big" type="button" disabled><svg class="i"><use href="#i-send"/></svg><span>Send all to my WhatsApp</span></button>
+          <button id="zip" class="btn ghost big" type="button" disabled><svg class="i"><use href="#i-zip"/></svg><span>Download all (.zip)</span></button>
+        </div>
+        <div class="send-progress" hidden><div class="track"><div class="fill"></div></div></div>
+        <p id="send-note" class="note" aria-live="polite"></p>
+      </div>
+
+      <ol id="steps" class="steps"></ol>
+    </section>
+
+    <details id="helper" class="helper card">
+      <summary><svg class="i"><use href="#i-puzzle"/></svg><span>WhatsApp helper: send everything to your own chat in one click</span></summary>
+      <p>A website cannot reach into WhatsApp Web by itself, so a small helper extension does it. With the helper, <b>Send all to my WhatsApp</b> opens WhatsApp Web in this browser and posts the text, the pictures and the PDFs, in order, into the chat with yourself ("You", "Message yourself" or your own name). It works for whichever WhatsApp account is logged in to WhatsApp Web here.</p>
       <p id="helper-state" class="note"></p>
-      <ol>
-        <li><button id="helper-zip" type="button">Download the helper (.zip)</button> and unzip it.</li>
+      <ol class="howto">
+        <li><button id="helper-zip" class="btn ghost small" type="button"><svg class="i"><use href="#i-download"/></svg>Download the helper (.zip)</button> and unzip it.</li>
         <li>Open <code>chrome://extensions</code> (Edge: <code>edge://extensions</code>) and turn on <b>Developer mode</b>.</li>
         <li>Click <b>Load unpacked</b> and choose the unzipped <code>report-helper</code> folder.</li>
         <li>Log in to <a href="https://web.whatsapp.com/" target="_blank" rel="noopener">WhatsApp Web</a> in this browser, then reload this page.</li>
       </ol>
-      <p class="note">Works in Chrome, Edge, Brave and other Chromium browsers on a computer. Phones cannot add extensions: there, each step's <b>Send to WhatsApp</b> opens the share screen, where you pick your own chat.</p>
+      <p class="note">Works in Chrome, Edge, Brave and other Chromium browsers on a computer. Phones cannot add extensions: there, each step's <b>Send</b> button opens the share screen, where you pick your own chat.</p>
     </details>
 
-    <footer>The file never leaves this device: it is read and drawn in your browser, and nothing is uploaded.</footer>
+    <footer>The workbook is read, drawn and packed in your browser. Nothing is uploaded, and nothing is kept after you close the page.</footer>
   </main>
+
+  <dialog id="viewer" class="viewer" aria-label="Picture viewer">
+    <div class="v-top">
+      <span id="v-count" class="v-count"></span>
+      <a id="v-dl" class="btn ghost small" download><svg class="i"><use href="#i-download"/></svg>Download</a>
+      <button id="v-close" class="btn icon" type="button" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="v-stage"><img id="v-img" alt=""></div>
+    <button id="v-prev" class="btn icon v-nav prev" type="button" aria-label="Previous picture"><svg class="i"><use href="#i-left"/></svg></button>
+    <button id="v-next" class="btn icon v-nav next" type="button" aria-label="Next picture"><svg class="i"><use href="#i-right"/></svg></button>
+  </dialog>
+
+  <div id="dropmask" class="dropmask" hidden><div><svg class="i"><use href="#i-upload"/></svg>Drop the workbook to open it</div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

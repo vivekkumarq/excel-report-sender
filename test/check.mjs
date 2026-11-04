@@ -35,18 +35,30 @@ assert.deepEqual(before, ['Alok_Kr_Singh_Sir_01', '_ccl_rake', 'AREAWISE_STOCK',
 assert.equal(REPORTS.filter(r => r.as === 'image').length, 23);
 console.log('separators: ok');
 
+// Lazy style tables: entries parse on first use and agree with a direct parse.
+const { parseStyles, parseFont } = await import('../xlsx.js');
+const st = parseStyles('<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="9"/><name val="Arial"/></font></fonts>'
+  + '<cellXfs count="1"><xf numFmtId="14" fontId="1" applyAlignment="1"><alignment horizontal="center" wrapText="1"/></xf></cellXfs>');
+assert.deepEqual(st.font(1), parseFont('<b/><sz val="9"/><name val="Arial"/>'));
+assert.equal(st.font(1), st.font(1)); // parsed once
+assert.deepEqual([st.xf(0).numFmt, st.xf(0).font, st.xf(0).h, st.xf(0).wrap], [14, 1, 'center', true]);
+assert.equal(st.xf(5), undefined);
+console.log('style tables: ok');
+
 const path = process.argv[2];
 if (path) {
-  const { loadBook } = await import('../book.js');
-  const { rangeText } = await import('../render.js');
+  const { openZip, readIndex, findNames, openBook } = await import('../book.js');
+  const { produce } = await import('../engine.js');
   const names = [...new Set(REPORTS.flatMap(r => [r.name ?? []].flat()))];
-  const t = performance.now();
-  const { book, names: refs, missing, timing } = await loadBook(new Blob([await readFile(path)]), names);
-  console.log(`loaded ${refs.size}/${names.length} reports in ${Math.round(performance.now() - t)} ms`, timing);
+  const t = performance.now(), file = new Blob([await readFile(path)]);
+  const index = await readIndex(await openZip(file)), { refs, missing } = findNames(index.wb, names);
   assert.deepEqual(missing, [], `missing names: ${missing}`);
+  const book = await openBook(file, index);
+  await book.load([...refs.values()].map(d => d.sheet));
+  console.log(`opened ${refs.size}/${names.length} reports in ${Math.round(performance.now() - t)} ms`);
   book.mdw = 8; // Calibri 12 (no canvas in Node to measure it)
   const sms = REPORTS.find(r => r.as === 'text');
-  const text = rangeText(book, refs.get(sms.name).sheet, refs.get(sms.name).range);
+  const { text } = await produce(book, { as: 'text', refs: [refs.get(sms.name)] });
   assert.match(text, /^\*Date:\*/);
   console.log(`${sms.name}: ${text.split('\n').length} lines\n${text.split('\n').slice(0, 4).join('\n')}\n…`);
 }

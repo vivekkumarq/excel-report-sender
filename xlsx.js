@@ -111,25 +111,38 @@ function parseBorder(x) {
 const block = (xml, tag) => new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml)?.[1] || '';
 const items = (xml, tag) => [...xml.matchAll(new RegExp(`<${tag}\\b[^>]*?(?:/>|>([\\s\\S]*?)</${tag}>)`, 'g'))].map(m => m[1] || '');
 
-export function parseStyles(xml) {
+// Style tables are looked up by index, and a workbook can hold thousands of entries (this one has 7,948 cell
+// formats) of which a report uses a few hundred, so each entry is parsed the first time it is asked for.
+const table = (raw, parse) => { const memo = []; return i => i in memo ? memo[i] : (memo[i] = raw[i] == null ? undefined : parse(raw[i])); };
+const XF = /<xf\b([^>]*?)(?:\/>|>([\s\S]*?)<\/xf>)/g;
+function parseXf(x) {
+  const m = new RegExp(XF.source).exec(x), a = attrs(m[1]), al = /<alignment\b([^>]*?)\/?>/.exec(m[2] || '');
+  const g = al ? attrs(al[1]) : {};
+  return {
+    numFmt: +(a.numFmtId || 0), font: +(a.fontId || 0), fill: +(a.fillId || 0), border: +(a.borderId || 0),
+    h: g.horizontal || 'general', v: g.vertical || 'bottom', wrap: on(g.wrapText) || g.horizontal === 'justify' || g.vertical === 'justify',
+    indent: +(g.indent || 0), rot: +(g.textRotation || 0), shrink: on(g.shrinkToFit),
+  };
+}
+
+// styles.xml split into its entries, still as XML text: plain data, cheap to hand to a worker.
+export function styleParts(xml) {
   const numFmts = {};
   for (const m of xml.matchAll(/<numFmt\b([^>]*?)\/?>/g)) { const a = attrs(m[1]); numFmts[+a.numFmtId] = unesc(a.formatCode); }
-  const fonts = items(block(xml, 'fonts'), 'font').map(parseFont);
-  const fills = items(block(xml, 'fills'), 'fill').map(f => parseFill(f, false));
-  const borders = items(block(xml, 'borders'), 'border').map(parseBorder);
-  const xfs = [...block(xml, 'cellXfs').matchAll(/<xf\b([^>]*?)(?:\/>|>([\s\S]*?)<\/xf>)/g)].map(m => {
-    const a = attrs(m[1]), al = /<alignment\b([^>]*?)\/?>/.exec(m[2] || '');
-    const g = al ? attrs(al[1]) : {};
-    return {
-      numFmt: +(a.numFmtId || 0), font: +(a.fontId || 0), fill: +(a.fillId || 0), border: +(a.borderId || 0),
-      h: g.horizontal || 'general', v: g.vertical || 'bottom', wrap: on(g.wrapText) || g.horizontal === 'justify' || g.vertical === 'justify',
-      indent: +(g.indent || 0), rot: +(g.textRotation || 0), shrink: on(g.shrinkToFit),
-    };
-  });
-  const dxfs = items(block(xml, 'dxfs'), 'dxf').map(parseDxf);
   const indexed = [...block(xml, 'indexedColors').matchAll(/rgb="([0-9A-Fa-f]{8})"/g)].map(m => m[1].slice(2));
-  return { numFmts, fonts, fills, borders, xfs, dxfs, indexed: indexed.length ? indexed : null };
+  return {
+    numFmts, indexed: indexed.length ? indexed : null,
+    fonts: items(block(xml, 'fonts'), 'font'), fills: items(block(xml, 'fills'), 'fill'), borders: items(block(xml, 'borders'), 'border'),
+    xfs: [...block(xml, 'cellXfs').matchAll(XF)].map(m => m[0]), dxfs: items(block(xml, 'dxfs'), 'dxf'),
+  };
 }
+// ... and the lookups the renderer uses, each entry parsed on first use.
+export const styleTables = p => ({
+  numFmts: p.numFmts, indexed: p.indexed,
+  font: table(p.fonts, parseFont), fill: table(p.fills, f => parseFill(f, false)), border: table(p.borders, parseBorder),
+  xf: table(p.xfs, parseXf), dxf: table(p.dxfs, parseDxf),
+});
+export const parseStyles = xml => styleTables(styleParts(xml));
 
 export function parseDxf(x) {
   const font = /<font\b[^>]*>([\s\S]*?)<\/font>/.exec(x), fill = /<fill\b[^>]*>([\s\S]*?)<\/fill>/.exec(x), border = /<border\b[^>]*>([\s\S]*?)<\/border>/.exec(x);

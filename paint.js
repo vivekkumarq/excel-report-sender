@@ -59,8 +59,7 @@ export function drawingColor(spec, theme, dflt) {
 // Excel font name -> CSS font stack. Installed Office fonts win; otherwise metric-compatible web fonts keep
 // text the same width (Carlito = Calibri, Tinos = Times New Roman, Arimo = Arial, Cousine = Courier New).
 const FALLBACK = { calibri: 'Carlito', 'calibri light': 'Carlito', 'times new roman': 'Tinos', arial: 'Arimo', 'arial mt': 'Arimo', 'arial narrow': 'Arimo', 'courier new': 'Cousine' };
-const SERIF = /times|cambria|georgia|bookman|garamond|antiqua|century|castellar|copperplate|roman|serif/i;
-export const WEB_FONTS = ['Carlito', 'Tinos', 'Arimo', 'Cousine'];
+const SERIF = /times|cambria|georgia|bookman|garamond|antiqua|century|castellar|copperplate|roman|serif/i; // web fonts: fonts.js
 export function family(name) {
   const n = String(name || 'Calibri').replace(/\0/g, '').replace(/\s*\(body\)\s*/i, '').trim() || 'Calibri';
   const fb = FALLBACK[n.toLowerCase()];

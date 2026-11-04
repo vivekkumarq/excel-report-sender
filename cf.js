@@ -215,7 +215,7 @@ export function cfOverrides(book, sheet, rng) {
           const res = test(r, c);
           if (!res) continue;
           const k = r * KEY + c, list = hits.get(k) || hits.set(k, []).get(k);
-          list.push({ prio: rule.prio, stop: rule.stop, dxf: typeof rule.dxf === 'number' ? book.styles.dxfs[rule.dxf] : rule.dxf, res });
+          list.push({ prio: rule.prio, stop: rule.stop, dxf: typeof rule.dxf === 'number' ? book.styles.dxf(rule.dxf) : rule.dxf, res });
         }
       }
     }
